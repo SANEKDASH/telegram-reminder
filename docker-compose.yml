@@ -1,0 +1,5 @@
+services:
+  telegram-bot:
+    build: ./services/telegram-bot/
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
