@@ -6,8 +6,6 @@ import (
 	"os/signal"
 	"context"
 
-	"github.com/joho/godotenv"
-
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
 )
@@ -20,12 +18,6 @@ func handler(ctx context.Context, b *bot.Bot, update *models.Update) {
 }
 
 func main() {
-	err:= godotenv.Load()
-	if err != nil {
-		log.Fatalf("Failed to load env: %v", err)
-		return
-	}
-
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	log.Printf("bot token: %v", botToken)
 
