@@ -10,10 +10,11 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
-func handler(ctx context.Context, b *bot.Bot, update *models.Update) {
+
+func helpHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
-		Text:   update.Message.Text,
+		Text:   "This is a help message.",
 	})
 }
 
@@ -25,10 +26,12 @@ func main() {
 	defer cancel()
 
 	opts := []bot.Option{
-		bot.WithDefaultHandler(handler),
+		bot.WithDefaultHandler(helpHandler),
 	}
 
 	b, err := bot.New(botToken, opts...)
+
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/help", bot.MatchTypeExact, helpHandler)
 
 	if err != nil {
 		log.Fatalf("Failed to start bot: %v", err)
