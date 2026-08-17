@@ -10,6 +10,53 @@ import (
 	"github.com/go-telegram/bot/models"
 )
 
+type ConversationState string
+
+const (
+	StateDefault ConversationState = ""
+	StateWaitingText ConversationState = "waiting text"
+)
+
+type SessionState struct {
+	LastMessage models.Message
+	CurrentState ConversationState
+}
+
+var currentSessionState SessionState = SessionState{}
+
+func defaultHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	switch currentSessionState.CurrentState {
+	case StateDefault:
+		helpHandler(ctx, b, update)
+	case  StateWaitingText:
+		_, err := b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID: update.Message.Chat.ID,
+			Text:   "Ok, I will remind this message later:",
+		})
+
+		if err != nil {
+			log.Fatalf("Failed to send help handler message: %v", err)
+			return
+		}
+
+		_, err = b.ForwardMessage(ctx, &bot.ForwardMessageParams{
+			ChatID: update.Message.Chat.ID,
+			FromChatID: update.Message.Chat.ID,
+			MessageID: update.Message.ID,
+		})
+
+		if err != nil {
+			log.Fatalf("Failed to send help handler message: %v", err)
+			return
+		}
+
+		currentSessionState.CurrentState = StateDefault
+
+	default:
+		log.Fatalf("Wrong conversation state")
+	}
+}
+
 func helpHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	_, err := b.SendMessage(ctx, &bot.SendMessageParams{
 		ChatID: update.Message.Chat.ID,
@@ -35,6 +82,8 @@ func remindHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 		return
 	}
 
+	currentSessionState.CurrentState = StateWaitingText
+
 	log.Print("Sent remind message.")
 }
 
@@ -45,7 +94,7 @@ func main() {
 	defer cancel()
 
 	opts := []bot.Option{
-		bot.WithDefaultHandler(helpHandler),
+		bot.WithDefaultHandler(defaultHandler),
 	}
 
 	b, err := bot.New(botToken, opts...)
